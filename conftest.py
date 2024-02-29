@@ -11,7 +11,7 @@ def pytest_addoption(parser):
         "--browser", default="chrome", help="choose the browser that you want to use"
     )
     parser.addoption("--headless", action="store_true")
-    parser.addoption("--base_url", default="https://www.opencart.com")
+    parser.addoption("--base_url", action="store", default="http://localhost", help="Base URL for testing")
 
 
 @pytest.fixture()
@@ -34,11 +34,14 @@ def browser(request):
         if headless:
             options.add_argument("-headless")
         driver = webdriver.Firefox(options=options)
+    else:
+        raise Exception("Driver not supported")
 
     driver.maximize_window()
 
     driver.base_url = base_url
-    yield driver
 
-    if driver is not None:
-        driver.quit()
+    request.addfinalizer(driver.quit)
+
+
+    return driver
