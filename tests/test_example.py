@@ -1,100 +1,75 @@
-import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
-
-"""Сделал проверку в каждом тесте на 5 элементов - при желании можно разбить на отдельные функции, 
-но не вижу в этом никакого смысла.
-Также использовал для практики как явные так и неявные ожидания в тестах."""
 
 
-def test_main_page(browser):
-    browser.get(browser.base_url)
+
+def test_login(browser):
+    browser.get(browser.base_url + "/administration/")
     browser.implicitly_wait(5)
 
-    browser.find_elements(By.CSS_SELECTOR, '[class="nav-item dropdown"]')[0].click()
-    browser.find_element(By.XPATH, '// *[text()="Mac (1)"]')
-    browser.find_element(By.XPATH, '// *[text()="PC (0)"]')
-    browser.find_element(
-        By.CSS_SELECTOR, '[class="btn btn-lg btn-inverse btn-block dropdown-toggle"]'
-    )
-    browser.find_element(By.CSS_SELECTOR, '[placeholder="Search"]').send_keys(
-        "mac", Keys.ENTER
-    )
-
-
-def test_catalogue_page(browser):
-    browser.get(browser.base_url)
-    browser.find_elements(By.CSS_SELECTOR, '[class="nav-item dropdown"]')[0].click()
-    browser.find_element(By.XPATH, '// *[text()="Mac (1)"]').click()
-    browser.execute_script("window.scrollBy(0, 500);")
-
-    Wait(browser, timeout=2.5).until(
-        EC.visibility_of_element_located((By.XPATH, '// *[text()="Privacy Policy"]'))
-    )
-    browser.find_element(By.CSS_SELECTOR, '[alt="HP Banner"]')
-    show_1_page = browser.find_element(By.CSS_SELECTOR, '[class="col-sm-6 text-end"]')
-    assert show_1_page.text == "Showing 1 to 1 of 1 (1 Pages)"
-    ex_tax = browser.find_element(By.CSS_SELECTOR, '[class="price-tax"]')
-    assert ex_tax.text == "Ex Tax: $100.00"
-    price_new = browser.find_element(By.CSS_SELECTOR, '[class="price-new"]')
-    assert price_new.text == "$122.00"
-
-
-def test_item_page(browser):
-    browser.get(browser.base_url)
-    browser.find_element(By.CSS_SELECTOR, '[alt="iPhone"]').click()
-
-    browser.find_element(
-        By.CSS_SELECTOR, '[title="iPhone"][class="img-thumbnail mb-3"]'
-    )
-    Wait(browser, timeout=2.5).until(
-        EC.visibility_of_element_located((By.ID, "button-cart"))
-    )
-
-    browser.find_element(By.XPATH, '// *[text()="Availability: In Stock"]')
-    browser.find_element(By.XPATH, '// *[text()="Ex Tax: $101.00"]')
-    price_iphone = browser.find_element(
-        By.CSS_SELECTOR, '[id="content"] [class="price-new"]'
-    )
-    assert price_iphone.text == "$123.20"
-
-
-def test_admin_page(browser):
-    browser.get(browser.base_url + "/administration")
-
-    Wait(browser, timeout=2.5).until(
-        EC.visibility_of_element_located((By.NAME, "username"))
-    )
-    Wait(browser, timeout=2.5).until(
-        EC.visibility_of_element_located((By.NAME, "password"))
-    )
-
-    text_header = browser.find_element(By.CLASS_NAME, "card-header")
-    assert text_header.text == "Please enter your login details."
+    browser.find_element(By.CSS_SELECTOR, '[name="username"]').send_keys("user")
+    browser.find_element(By.CSS_SELECTOR, '[name="password"]').send_keys("bitnami")
     browser.find_element(By.CSS_SELECTOR, '[type="submit"]').click()
-    text_footer = browser.find_element(By.ID, "footer")
-    assert text_footer.text == "OpenCart © 2009-2024 All Rights Reserved."
+    user_name = browser.find_element(
+        By.CSS_SELECTOR, '[class="d-none d-md-inline d-lg-inline"]'
+    )
+    assert user_name.text == "   John Doe", "авторизация не успешна"
+    browser.find_element(By.CSS_SELECTOR, '[class="d-none d-md-inline"]').click()
+    header_login_page = browser.find_element(By.CSS_SELECTOR, '[class="card-header"]')
+    assert (
+        header_login_page.text == "Please enter your login details."
+    ), "разлог не выполнен"
 
 
-def test_register_page(browser):
-    browser.get(browser.base_url + "/index.php?route=account/register")
+def test_cart(browser):
+    browser.get(browser.base_url)
+    browser.execute_script("window.scrollBy(0, 1000);")
+    btn_add_to_cart = Wait(browser, 10).until(
+        EC.presence_of_all_elements_located((By.CSS_SELECTOR, '[title="Add to Cart"]'))
+    )
+    browser.execute_script("arguments[0].scrollIntoView();", btn_add_to_cart[0])
+    browser.execute_script("arguments[0].click();", btn_add_to_cart[0])
+    browser.execute_script("window.scrollBy(0, -1000);")
+    btn = Wait(browser, 10).until(
+        EC.presence_of_element_located((By.XPATH, '// *[text()="Shopping Cart"]'))
+    )
+    browser.execute_script("arguments[0].click();", btn)
 
-    firstname = Wait(browser, timeout=2.5).until(
-        EC.visibility_of_element_located((By.NAME, "firstname"))
+    quantity = Wait(browser, 10).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, '[name="quantity"]'))
     )
-    firstname.send_keys("Klim")
-    lastname = Wait(browser, timeout=2.5).until(
-        EC.visibility_of_element_located((By.NAME, "lastname"))
+    quantity = quantity.get_attribute("value")
+    assert quantity == "1"
+
+
+def test_prices_change_on_main_page(browser):
+    browser.get(browser.base_url)
+    browser.find_element(
+        By.CSS_SELECTOR, '[id="form-currency"] [data-bs-toggle="dropdown"]'
+    ).click()
+
+    browser.find_element(By.XPATH, '// *[text()="€ Euro"]').click()
+
+    goods_prices = Wait(browser, timeout=5).until(
+        EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".price-new"))
     )
-    lastname.send_keys("QA")
-    email = Wait(browser, timeout=2.5).until(
-        EC.visibility_of_element_located((By.NAME, "email"))
+    assert "€" in goods_prices[0].text
+
+
+def test_prices_change_on_catalogue_page(browser):
+    browser.get(browser.base_url)
+    browser.find_element(
+        By.CSS_SELECTOR, '[id="form-currency"] [data-bs-toggle="dropdown"]'
+    ).click()
+    browser.find_element(By.XPATH, '// *[text()="€ Euro"]').click()
+    browser.find_element(
+        By.CSS_SELECTOR,
+        'a[href="http://localhost/en-gb/catalog/desktops"][class="nav-link dropdown-toggle"]',
+    ).click()
+    browser.find_element(By.XPATH, '// *[text()="Show All Desktops"]').click()
+    browser.execute_script("window.scrollBy(0, 500);")
+    goods_prices = Wait(browser, timeout=5).until(
+        EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".price-new"))
     )
-    email.send_keys("123@123.com")
-    password = Wait(browser, timeout=2.5).until(
-        EC.visibility_of_element_located((By.NAME, "password"))
-    )
-    password.send_keys("12345")
-    browser.find_element(By.ID, "input-newsletter").click()
+    assert "€" in goods_prices[0].text
