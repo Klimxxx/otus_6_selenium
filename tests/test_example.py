@@ -1,75 +1,127 @@
+import logging
+import time
+from selenium.webdriver import ActionChains
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.support import expected_conditions as EC
 
+from page_objects.admin_page import Admin_page
+from page_objects.cart_page import Cart_page
+from page_objects.main_page import Main_page
+from page_objects.orders_page import Orders_page
+from page_objects.registration_page import Registration_page
 
 
-def test_login(browser):
+def test_add_product_to_orders(browser):
+    """Добавление нового товара в разделе администратора в Ордерс"""
     browser.get(browser.base_url + "/administration/")
     browser.implicitly_wait(5)
 
-    browser.find_element(By.CSS_SELECTOR, '[name="username"]').send_keys("user")
-    browser.find_element(By.CSS_SELECTOR, '[name="password"]').send_keys("bitnami")
-    browser.find_element(By.CSS_SELECTOR, '[type="submit"]').click()
-    user_name = browser.find_element(
-        By.CSS_SELECTOR, '[class="d-none d-md-inline d-lg-inline"]'
-    )
-    assert user_name.text == "   John Doe", "авторизация не успешна"
-    browser.find_element(By.CSS_SELECTOR, '[class="d-none d-md-inline"]').click()
-    header_login_page = browser.find_element(By.CSS_SELECTOR, '[class="card-header"]')
-    assert (
-        header_login_page.text == "Please enter your login details."
-    ), "разлог не выполнен"
+    admin_page = Admin_page(browser)
+    admin_page.login(username="user", password="bitnami")
+    main_page = Main_page(browser)
+    main_page.menu_orders_click()
+    order_page = Orders_page(browser)
+    order_page.add_new_product()
+    order_page.add_new_customer()
+    order_page.add_new_payment_address()
+    order_page.add_new_shipping_address()
+    order_page.add_new_shipping_method()
+    order_page.add_new_payment_method()
+    order_page.confirm_form()
+
+    order_page.check_success_sending_form()
+
+
+def test_delete_product_from_orders(browser):
+    """Удаление товара из списка в Ордерс в разделе администратора"""
+    browser.get(browser.base_url + "/administration/")
+    browser.implicitly_wait(5)
+
+    admin_page = Admin_page(browser)
+    admin_page.login(username="user", password="bitnami")
+    main_page = Main_page(browser)
+    main_page.menu_orders_click()
+    order_page = Orders_page(browser)
+    order_page.add_new_product()
+    order_page.delete_added_product()
+
+    order_page.check_no_products_on_page()
+
+
+def test_registation_new_user(browser):
+    """Регистрация нового пользователя в магазине opencart"""
+    browser.implicitly_wait(5)
+    browser.get(browser.base_url + "/en-gb?route=account/register")
+
+    registration_page = Registration_page(browser)
+    registration_page.add_username()
+    registration_page.add_lastname()
+    registration_page.add_email()
+    registration_page.accept_privacy_policy()
+    registration_page.submit_form()
+
+    registration_page.check_success_filling_form()
+
+
+def test_prices_change_on_main_page_euro(browser):
+    """Переключение валют из верхнего меню opencart на евро"""
+    browser.get(browser.base_url)
+    main_page = Main_page(browser)
+    main_page.open_currency_dropbox()
+    main_page.choose_euro_currency()
+
+    main_page.check_currency_in_products(currency="€")
+
+
+def test_prices_change_on_main_page_pound(browser):
+    """Переключение валют из верхнего меню opencart на фунты"""
+    browser.get(browser.base_url)
+    main_page = Main_page(browser)
+    main_page.open_currency_dropbox()
+    main_page.choose_pound_currency()
+
+    main_page.check_currency_in_products(currency="£")
+
+
+def test_prices_change_on_main_page_dollar(browser):
+    """Переключение валют из верхнего меню opencart на доллар"""
+    browser.get(browser.base_url)
+    main_page = Main_page(browser)
+    main_page.open_currency_dropbox()
+    main_page.choose_dollar_currency()
+
+    main_page.check_currency_in_products(currency="$")
+
+
+def test_login(browser):
+    """Проверка успешной авторизации на админ странице"""
+    browser.get(browser.base_url + "/administration/")
+    browser.implicitly_wait(5)
+
+    admin_page = Admin_page(browser)
+    admin_page.login(username="user", password="bitnami")
+
+    admin_page.check_auth_succesful()
 
 
 def test_cart(browser):
+    """Проверка количества товаров в корзине после добавления 1 товара"""
     browser.get(browser.base_url)
-    browser.execute_script("window.scrollBy(0, 1000);")
-    btn_add_to_cart = Wait(browser, 10).until(
-        EC.presence_of_all_elements_located((By.CSS_SELECTOR, '[title="Add to Cart"]'))
-    )
-    browser.execute_script("arguments[0].scrollIntoView();", btn_add_to_cart[0])
-    browser.execute_script("arguments[0].click();", btn_add_to_cart[0])
-    browser.execute_script("window.scrollBy(0, -1000);")
-    btn = Wait(browser, 10).until(
-        EC.presence_of_element_located((By.XPATH, '// *[text()="Shopping Cart"]'))
-    )
-    browser.execute_script("arguments[0].click();", btn)
+    main_page = Main_page(browser)
+    main_page.add_product_to_cart()
+    main_page.open_cart()
 
-    quantity = Wait(browser, 10).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, '[name="quantity"]'))
-    )
-    quantity = quantity.get_attribute("value")
-    assert quantity == "1"
-
-
-def test_prices_change_on_main_page(browser):
-    browser.get(browser.base_url)
-    browser.find_element(
-        By.CSS_SELECTOR, '[id="form-currency"] [data-bs-toggle="dropdown"]'
-    ).click()
-
-    browser.find_element(By.XPATH, '// *[text()="€ Euro"]').click()
-
-    goods_prices = Wait(browser, timeout=5).until(
-        EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".price-new"))
-    )
-    assert "€" in goods_prices[0].text
+    cart_page = Cart_page(browser)
+    cart_page.check_quantity_of_goods()
 
 
 def test_prices_change_on_catalogue_page(browser):
+    """Проверка изменения цены на евро в рубрике All_desktop"""
     browser.get(browser.base_url)
-    browser.find_element(
-        By.CSS_SELECTOR, '[id="form-currency"] [data-bs-toggle="dropdown"]'
-    ).click()
-    browser.find_element(By.XPATH, '// *[text()="€ Euro"]').click()
-    browser.find_element(
-        By.CSS_SELECTOR,
-        'a[href="http://localhost/en-gb/catalog/desktops"][class="nav-link dropdown-toggle"]',
-    ).click()
-    browser.find_element(By.XPATH, '// *[text()="Show All Desktops"]').click()
-    browser.execute_script("window.scrollBy(0, 500);")
-    goods_prices = Wait(browser, timeout=5).until(
-        EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".price-new"))
-    )
-    assert "€" in goods_prices[0].text
+    main_page = Main_page(browser)
+    main_page.open_currency_dropbox()
+    main_page.choose_euro_currency()
+
+    main_page.check_price_in_rubric_all_desktop()
