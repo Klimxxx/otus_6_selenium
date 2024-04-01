@@ -1,5 +1,5 @@
 import time
-
+import allure
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.support import expected_conditions as EC
@@ -8,7 +8,9 @@ from selenium.webdriver.support import expected_conditions as EC
 class Orders_page:
     def __init__(self, browser):
         self.browser = browser
+        self.logger = browser.logger
 
+    @allure.step("Добавление нового продукта")
     def add_new_product(self):
         add_new = Wait(self.browser, 10).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, '[class="fa-solid fa-plus"]'))
@@ -31,11 +33,15 @@ class Orders_page:
             By.CSS_SELECTOR, '[id="modal-cart"] [data-bs-dismiss="modal"]'
         )
         close_window.click()
+        self.logger.info("Продукт добавлен успешно")
 
+    @allure.step("Удаление добавленного продукта")
     def delete_added_product(self):
         time.sleep(2)
         self.browser.find_element(By.CSS_SELECTOR, '[title="Remove"]').click()
+        self.logger.info("Добавленный продукт удален успешно")
 
+    @allure.step("Добавление нового покупателя")
     def add_new_customer(self):
         time.sleep(2)
         open_customer = self.browser.find_element(
@@ -61,7 +67,9 @@ class Orders_page:
             By.CSS_SELECTOR, '[id="modal-customer"] [class="btn-close"]'
         )
         close_window.click()
+        self.logger.info("Новый покупатель добавлен успешно")
 
+    @allure.step("Добавление нового адреса для оплаты")
     def add_new_payment_address(self):
         time.sleep(2)
         open_wnd_pmt_address = self.browser.find_element(
@@ -98,7 +106,9 @@ class Orders_page:
             By.CSS_SELECTOR, '[id="modal-payment-address"] [class="btn-close"]'
         )
         close_window.click()
+        self.logger.info("Новый адрес для оплаты добавлен успешно")
 
+    @allure.step("Добавление нового адреса для доставки")
     def add_new_shipping_address(self):
         time.sleep(2)
         open_wnd_ship_address = self.browser.find_element(
@@ -135,7 +145,9 @@ class Orders_page:
             By.CSS_SELECTOR, '[id="modal-shipping-address"] [class="btn-close"]'
         )
         close_window.click()
+        self.logger.info("Новый адрес для доставки добавлен успешно")
 
+    @allure.step("Добавление нового метода доставки")
     def add_new_shipping_method(self):
         time.sleep(2)
         open_wnd_ship_metod = self.browser.find_element(
@@ -154,7 +166,9 @@ class Orders_page:
             By.CSS_SELECTOR, '[id="modal-shipping"] [class="btn-close"]'
         )
         close_window.click()
+        self.logger.info("Новый метод доставки добавлен успешно")
 
+    @allure.step("Добавление нового метода оплаты")
     def add_new_payment_method(self):
         time.sleep(2)
         open_payment_metod = self.browser.find_element(
@@ -174,13 +188,17 @@ class Orders_page:
             By.CSS_SELECTOR, '[id="modal-payment"] [class="btn-close"]'
         )
         close_window.click()
+        self.logger.info("Новый платежный добавлен успешно")
 
+    @allure.step("Подтверждение формы")
     def confirm_form(self):
         confirm_btn = self.browser.find_element(
             By.CSS_SELECTOR, '[id="button-confirm"] [class="fa-solid fa-floppy-disk"]'
         )
         self.browser.execute_script("arguments[0].click();", confirm_btn)
+        self.logger.info("Отправка формы прошла успешно")
 
+    @allure.step("Проверка успешной отправки формы")
     def check_success_sending_form(self):
         time.sleep(1)
         Wait(self.browser, 10).until(
@@ -188,9 +206,12 @@ class Orders_page:
                 (By.XPATH, '// *[text()=" Success: You have modified orders! "]')
             )
         )
+        self.logger.info("Проверка отправки формы выполнена")
 
+    @allure.step("Проверка отсутствия товаров на странице")
     def check_no_products_on_page(self):
         no_results = self.browser.find_element(
             By.CSS_SELECTOR, '[id="order-vouchers"] [class="text-center"]'
         )
         assert no_results.text == "No results!"
+        self.logger.info("Проверка что на странице нет товаров")
