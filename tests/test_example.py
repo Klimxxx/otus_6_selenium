@@ -15,7 +15,7 @@ from page_objects.registration_page import Registration_page
 
 def test_add_product_to_orders(browser):
     """Добавление нового товара в разделе администратора в Ордерс"""
-    browser.get(browser.base_url + "/administration/")
+    browser.get("https://localhost" + "/administration/")
     browser.implicitly_wait(5)
 
     admin_page = Admin_page(browser)
@@ -125,3 +125,9 @@ def test_prices_change_on_catalogue_page(browser):
     main_page.choose_euro_currency()
 
     main_page.check_price_in_rubric_all_desktop()
+
+
+def test_example(browser):
+    browser.get(browser.base_url)
+    time.sleep(1)
+    assert browser.title == "Your Store"

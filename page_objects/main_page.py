@@ -1,3 +1,5 @@
+import time
+
 import allure
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait as Wait
@@ -47,7 +49,9 @@ class Main_page:
 
     @allure.step("Добавление товара в корзину")
     def add_product_to_cart(self):
+
         self.browser.execute_script("window.scrollBy(0, 1000);")
+
         btn_add_to_cart = Wait(self.browser, 10).until(
             EC.presence_of_all_elements_located(
                 (By.CSS_SELECTOR, '[title="Add to Cart"]')
@@ -61,7 +65,7 @@ class Main_page:
 
     @allure.step("Открытие корзины")
     def open_cart(self):
-        btn = Wait(self.browser, 10).until(
+        btn = Wait(self.browser, 60).until(
             EC.presence_of_element_located((By.XPATH, '// *[text()="Shopping Cart"]'))
         )
         self.browser.execute_script("arguments[0].click();", btn)
