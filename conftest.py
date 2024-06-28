@@ -19,6 +19,7 @@ def pytest_addoption(parser):
     parser.addoption("--log_level", action="store", default="DEBUG")
     parser.addoption("--mobile", action="store_true")
 
+
 @pytest.fixture()
 def browser(request):
     browser_name = request.config.getoption("--browser")
@@ -104,3 +105,4 @@ def log_test_result(request):
         logger.error("Test %s failed: %s" % (request.node.name, report.longrepr))
     elif report.when == 'call' and report.passed:
         logger.info("Test %s passed" % request.node.name)
+
