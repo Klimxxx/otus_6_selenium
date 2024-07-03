@@ -1,0 +1,8 @@
+.idea
+venv
+*.md
+__pycache__
+.env
+*.log
+allure-results
+.pytest_cache
