@@ -9,7 +9,7 @@ from selenium.webdriver.edge.options import Options as EdgeOptions
 def pytest_addoption(parser):
     parser.addoption("--browser", action="store", default="firefox")
     parser.addoption("--headless", action="store_true")
-    parser.addoption("--executor", action="store", default="host.docker.internal")
+    parser.addoption("--executor", action="store", default="172.17.0.1")
     parser.addoption("--bv", action="store", default="125.0")
     parser.addoption("--vnc", action="store_true")
     parser.addoption("--video", action="store_true")
