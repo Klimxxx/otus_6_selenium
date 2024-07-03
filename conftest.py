@@ -18,6 +18,8 @@ def pytest_addoption(parser):
     parser.addoption("--log_level", action="store", default="DEBUG")
     parser.addoption("--mobile", action="store_true")
 
+
+
 @pytest.fixture()
 def browser(request):
     browser_name = request.config.getoption("--browser")
@@ -69,6 +71,7 @@ def browser(request):
         }
     }
 
+
     if options:
         for k, v in caps.items():
             options.set_capability(k, v)
@@ -93,7 +96,6 @@ def pytest_runtest_makereport(item, call):
     report = outcome.get_result()
     setattr(item, "report", report)
 
-# Добавлено: логирование результатов тестов
 @pytest.fixture(autouse=True)
 def log_test_result(request):
     yield
@@ -103,3 +105,4 @@ def log_test_result(request):
         logger.error("Test %s failed: %s" % (request.node.name, report.longrepr))
     elif report.when == 'call' and report.passed:
         logger.info("Test %s passed" % request.node.name)
+
