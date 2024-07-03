@@ -6,16 +6,15 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.edge.options import Options as EdgeOptions
 
-# Добавлено: функция для добавления опций командной строки
 def pytest_addoption(parser):
     parser.addoption("--browser", action="store", default="firefox")
     parser.addoption("--headless", action="store_true")
     parser.addoption("--executor", action="store", default="host.docker.internal")
     parser.addoption("--bv", action="store", default="125.0")
-    parser.addoption("--vnc", action="store_true")  # Изменено: флаг без аргумента
-    parser.addoption("--video", action="store_true")  # Изменено: флаг без аргумента
+    parser.addoption("--vnc", action="store_true")
+    parser.addoption("--video", action="store_true")
     parser.addoption("--logs", action="store_true")
-    parser.addoption("--base_url", action="store", default="http://host.docker.internal:8082")
+    parser.addoption("--base_url", action="store", default="https://demo.opencart.com/")
     parser.addoption("--log_level", action="store", default="DEBUG")
     parser.addoption("--mobile", action="store_true")
 
