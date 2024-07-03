@@ -136,5 +136,3 @@ def test_example(browser):
     browser.get(browser.base_url)
     time.sleep(1)
     assert True
-
-
