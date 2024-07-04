@@ -1,0 +1,51 @@
+pipeline {
+    agent any
+    parameters {
+        string(name: 'executor', defaultValue: '192.168.202.122', description: 'Executor host')
+        string(name: 'base_url', defaultValue: 'https://demo.opencart.com', description: 'Base URL for tests')
+        string(name: 'browser', defaultValue: 'firefox', description: 'Browser for tests')
+    }
+    environment {
+        ALLURE_RESULTS = 'allure-results'
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Klimxxx/otus_6_selenium.git'
+            }
+        }
+        stage('Setup Python Environment') {
+            steps {
+                sh '''
+                apt update && apt install python3-venv python3-pip -y
+                python3 -m venv venv
+                '''
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh '''
+                pip install --no-cache-dir --break-system-packages -r requirements.txt
+                pip install --no-cache-dir --break-system-packages pytest
+                '''
+            }
+        }
+        stage('Run Tests') {
+            steps {
+                sh '''
+                pytest --alluredir=$ALLURE_RESULTS  \
+                       --executor=192.168.202.122 \
+                       --base_url=https://demo.opencart.com \
+                       --browser=firefox
+                '''
+            }
+        }
+    }
+    post {
+        always {
+            script {
+                echo 'Skipping Allure report generation.'
+            }
+        }
+    }
+}

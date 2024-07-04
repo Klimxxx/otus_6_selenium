@@ -134,5 +134,4 @@ def test_prices_change_on_catalogue_page(browser):
 @allure.title('Тест для проверки работы дженкинса')
 def test_example(browser):
     browser.get(browser.base_url)
-    time.sleep(1)
     assert True
