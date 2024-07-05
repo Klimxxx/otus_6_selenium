@@ -1,3 +1,4 @@
+import os
 import pytest
 import logging
 import datetime
@@ -7,9 +8,11 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.edge.options import Options as EdgeOptions
 
 def pytest_addoption(parser):
+    default_executor = os.getenv('SELENOID_HOST', 'host.docker.internal')
+
     parser.addoption("--browser", action="store", default="firefox")
     parser.addoption("--headless", action="store_true")
-    parser.addoption("--executor", action="store", default="192.168.202.122")
+    parser.addoption("--executor", action="store", default=default_executor)
     parser.addoption("--bv", action="store", default="125.0")
     parser.addoption("--vnc", action="store_true")
     parser.addoption("--video", action="store_true")
