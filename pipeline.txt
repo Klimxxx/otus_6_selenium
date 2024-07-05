@@ -1,7 +1,7 @@
 pipeline {
     agent any
     parameters {
-        string(name: 'executor', defaultValue: '192.168.202.122', description: 'Executor host')
+        string(name: 'executor', defaultValue: 'host.docker.internal', description: 'Executor host')
         string(name: 'base_url', defaultValue: 'https://demo.opencart.com', description: 'Base URL for tests')
         string(name: 'browser', defaultValue: 'firefox', description: 'Browser for tests')
     }
@@ -16,36 +16,49 @@ pipeline {
         }
         stage('Setup Python Environment') {
             steps {
-                sh '''
-                apt update && apt install python3-venv python3-pip -y
-                python3 -m venv venv
-                '''
+                script {
+                    // Использование bash вместо sh
+                    sh '''#!/bin/bash
+                    apt-get update && apt-get install python3-venv python3-pip -y
+                    python3 -m venv venv
+                    source venv/bin/activate
+                    '''
+                }
             }
         }
         stage('Install Dependencies') {
             steps {
-                sh '''
-                pip install --no-cache-dir --break-system-packages -r requirements.txt
-                pip install --no-cache-dir --break-system-packages pytest
-                '''
+                script {
+                    // Использование bash вместо sh
+                    sh '''#!/bin/bash
+                    source venv/bin/activate
+                    pip install --no-cache-dir -r requirements.txt
+                    pip install --no-cache-dir pytest
+                    '''
+                }
             }
         }
         stage('Run Tests') {
             steps {
-                sh '''
-                pytest --alluredir=$ALLURE_RESULTS  \
-                       --executor=192.168.202.122 \
-                       --base_url=https://demo.opencart.com \
-                       --browser=firefox
-                '''
+                script {
+                    // Использование bash и корректное обращение к переменным
+                    sh """#!/bin/bash
+                    source venv/bin/activate
+                    pytest --alluredir=$ALLURE_RESULTS \\
+                           --executor=$params.executor \\
+                           --base_url=$params.base_url \\
+                           --browser=$params.browser
+                    """
+                }
             }
         }
     }
     post {
         always {
-            script {
-                echo 'Skipping Allure report generation.'
-            }
+            allure includeProperties:
+                     false,
+                     jdk: '',
+                     results: [[path: 'build/allure-results']]
         }
     }
 }
